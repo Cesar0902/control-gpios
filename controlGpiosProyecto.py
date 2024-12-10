@@ -55,14 +55,16 @@ class GPIOController:
         ttk.Radiobutton(self.frame, text="OFF", variable=self.radio_var, value="0", command=self.evaluar_radiobutton).place(x=60, y=180)
 
         # Combobox
-        ttk.Combobox(self.frame, textvariable=self.combo_var, values=["ON", "OFF"]).place(x=150, y=215)
+        self.combo_box = ttk.Combobox(self.frame, textvariable=self.combo_var, values=["ON", "OFF"], state="disabled")  # Inicialmente deshabilitado
+        self.combo_box.place(x=150, y=215)
         Button(self.frame, text=">>", command=self.evaluar_combobox, bg="darkcyan").place(x=330, y=210)
 
         # Checkbox para recibir email
         ttk.Checkbutton(self.frame, text="Enable/Disable Receive Email", variable=self.receive_email_var, command=self.evaluar_email).place(x=0, y=280)
 
         # Checkbox para enviar email
-        ttk.Checkbutton(self.frame, text="Enable/Disable Send Email", variable=self.send_email_var, command=self.enviar_email).place(x=150, y=245)
+        self.send_email_checkbox = ttk.Checkbutton(self.frame, text="Enable/Disable Send Email", variable=self.send_email_var, command=self.evaluar_email)
+        self.send_email_checkbox.place(x=150, y=245)
 
         # Botón para programar tiempo
         Button(self.frame, text="Tiempo", command=self.dialogo_tiempo, bg="green", fg="beige").place(x=0, y=90)
@@ -213,22 +215,56 @@ class GPIOController:
     
     def evaluar_email(self):
         if self.receive_email_var.get() == "1":
+            self.combo_box.config(state="normal")  # Habilitar Combobox
             os.system(f"echo {self.password}|sudo -S sudo {self.inbox_script} &")
             messagebox.showinfo("Save", f"Email Receive Service GPIO{self.gpio_number} --enabled--")
         else:
+            self.combo_box.config(state="disabled")  # Deshabilitar Combobox
             os.system(f"echo {self.password}|sudo -S sudo pkill -f {self.inbox_script}")
+            VaciarDatos()
+            LlenarTabla()
             messagebox.showinfo("Save", f"Email Receive Service GPIO{self.gpio_number} --disabled--")
-        VaciarDatos()
-        LlenarTabla()
-        
-    
-    def enviar_email(self):
+
         if self.send_email_var.get() == "1":
+            self.combo_box.config(state="normal")  # Habilitar Combobox
             messagebox.showinfo("Save", f"Email Send Service GPIO{self.gpio_number} --enabled--")
         else:
+            self.combo_box.config(state="disabled")  # Deshabilitar Combobox
             messagebox.showinfo("Save", f"Email Send Service GPIO{self.gpio_number} --disabled--")
 
+    def evaluar_combobox(self):
+        """ Enviar comandos ON/OFF desde el Combobox """
+        if self.combo_var.get() == "ON":
+            self.encender_gpio()
+            os.system(f"echo {self.password}|sudo -S sudo {self.email_on_script}")
+        elif self.combo_var.get() == "OFF":
+            self.apagar_gpio()
+            os.system(f"echo {self.password}|sudo -S sudo {self.email_off_script}")
+
 #-----------------------------------------Creando Ventana con las GPIOs-----------------------------------------
+def VaciarDatos():                   
+    informacion=table_data.get_children()                  
+    
+    for cant in informacion:
+        table_data.delete(cant)                
+
+def LlenarTabla():
+    conexion=sql.connect(host="localhost",user="developer",
+        password="Developer",database="arquitectura")
+
+    consulta=StringVar()
+    consulta="SELECT * FROM proyecto_final"
+    
+    cursor=conexion.cursor()
+    cursor.execute(consulta)
+    resultado=cursor.fetchall()                  
+    
+    for valor in resultado:
+        table_data.insert("","0",values=valor)
+
+    conexion.close()
+
+
 v0=Tk()
 v0.title("Controles GPIO")
 v0.geometry("1575x560+200+200")
@@ -257,28 +293,6 @@ gpio22 = GPIOController(22, fr2)
 gpio27 = GPIOController(27, fr3)
 
 #-----------------------------------------Mostrar informacion de la BD-----------------------------------------
-def VaciarDatos():                   
-    informacion=table_data.get_children()                  
-    
-    for cant in informacion:
-        table_data.delete(cant)                
-
-def LlenarTabla():
-    conexion=sql.connect(host="localhost",user="developer",
-        password="Developer",database="arquitectura")
-
-    consulta=StringVar()
-    consulta="SELECT * FROM proyecto_final"
-    
-    cursor=conexion.cursor()
-    cursor.execute(consulta)
-    resultado=cursor.fetchall()                  
-    
-    for valor in resultado:
-        table_data.insert("","0",values=valor)
-
-    conexion.close()
-
 table_data.column("#0",width=0,anchor=CENTER)
 table_data.column("col0",width=100,anchor=CENTER)
 table_data.column("col1",width=140,anchor=CENTER)
