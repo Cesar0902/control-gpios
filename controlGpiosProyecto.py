@@ -10,11 +10,9 @@ import mysql.connector as sql
 
 #----------------------------------------------------GPIO TEMPLATE----------------------------------------------------
 class GPIOController:
-    def __init__(self, gpio_number, frame, img_on, img_off, password="1234567"):
+    def __init__(self, gpio_number, frame, password="1234567"):
         self.gpio_number = gpio_number
         self.frame = frame
-        self.img_on = img_on
-        self.img_off = img_off
         self.password = password
 
         # Archivos y scripts
@@ -24,6 +22,8 @@ class GPIOController:
         self.email_on_script = f"/home/cesar/sendEmailOn{gpio_number}.sh"
         self.email_off_script = f"/home/cesar/sendEmailOff{gpio_number}.sh"
         self.inbox_script = f"/home/cesar/lecturaInbox{gpio_number}.sh"
+        self.img_on=PhotoImage(file="/home/cesar/on.png").subsample(4)
+        self.img_off=PhotoImage(file="/home/cesar/off.png").subsample(4)
 
         # Variables para controles
         self.check_var = StringVar()
@@ -238,13 +238,9 @@ scrollbar.grid(row=1, column=3, sticky='ns')
 text1=font.Font(family="Arial", size=80)
 text2=font.Font(family="Arial",size=16)
 
-#imagenes
-img_on=PhotoImage(file="/home/cesar/on.png").subsample(4)
-img_off=PhotoImage(file="/home/cesar/off.png").subsample(4)
-
-gpio17 = GPIOController(17, fr1, img_on, img_off)
-gpio22 = GPIOController(22, fr2, img_on, img_off)
-gpio27 = GPIOController(27, fr3, img_on, img_off)
+gpio17 = GPIOController(17, fr1)
+gpio22 = GPIOController(22, fr2)
+gpio27 = GPIOController(27, fr3)
 
 #-----------------------------------------Mostrar informacion de la BD-----------------------------------------
 def VaciarDatos():                   
