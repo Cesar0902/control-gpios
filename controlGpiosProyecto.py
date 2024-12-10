@@ -37,6 +37,7 @@ class GPIOController:
         # Actualizaciones automaticas.
         self.actualiza_estado_label()
         self.actualiza_estado_boton()
+        self.monitorizar_correos()
 
     def crear_interfaz(self):
         # Título
@@ -98,6 +99,18 @@ class GPIOController:
                     Button(self.frame, image=self.img_off).place(x=250, y=60)
         self.frame.after(1000, self.actualiza_estado_boton)
     
+    def monitorizar_correos(self):
+        with open(self.estado_path, "r") as pf:
+            for linea in pf:
+                campo = linea.strip()
+                if campo in ["1", "0"]:
+                    VaciarDatos()
+                    LlenarTabla()
+        
+
+        # Verificar nuevamente después de 2 segundos
+        self.frame.after(2000, self.monitorizar_correos)
+
     def salvar_tiempo(self, horai, minini, horaf, minf):
         print(f"Registrando Tiempo GPIO{self.gpio_number}")
         hi = horai.get()
@@ -204,9 +217,10 @@ class GPIOController:
             messagebox.showinfo("Save", f"Email Receive Service GPIO{self.gpio_number} --enabled--")
         else:
             os.system(f"echo {self.password}|sudo -S sudo pkill -f {self.inbox_script}")
-            VaciarDatos()
-            LlenarTabla()
             messagebox.showinfo("Save", f"Email Receive Service GPIO{self.gpio_number} --disabled--")
+        VaciarDatos()
+        LlenarTabla()
+        
     
     def enviar_email(self):
         if self.send_email_var.get() == "1":
